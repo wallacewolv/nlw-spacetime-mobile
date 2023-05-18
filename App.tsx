@@ -22,7 +22,7 @@ export default function App() {
 
   return (
     <View className="flex-1 items-center justify-center bg-gray-900">
-      <Text className="font-alt text-5xl text-gray-50">Rocketseat</Text>
+      <Text className="font-title text-5xl text-gray-50">Rocketseat</Text>
       <StatusBar style="light" translucent />
     </View>
   )
