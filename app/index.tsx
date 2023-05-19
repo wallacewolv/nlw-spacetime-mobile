@@ -1,20 +1,23 @@
-import { BaiJamjuree_700Bold } from '@expo-google-fonts/bai-jamjuree'
-import {
-  Roboto_400Regular,
-  Roboto_700Bold,
-  useFonts,
-} from '@expo-google-fonts/roboto'
-import { makeRedirectUri, useAuthRequest } from 'expo-auth-session'
 import { StatusBar } from 'expo-status-bar'
-import { styled } from 'nativewind'
+import { useEffect } from 'react'
+import { useRouter } from 'expo-router'
 import { ImageBackground, Text, TouchableOpacity, View } from 'react-native'
+import { makeRedirectUri, useAuthRequest } from 'expo-auth-session'
+import { styled } from 'nativewind'
 import * as SecureStore from 'expo-secure-store'
 
-import blurBg from './src/assets/bg-blur.png'
-import NLWLogo from './src/assets/nlw-spacetime-logo.svg'
-import Stripes from './src/assets/stripes.svg'
-import { useEffect } from 'react'
-import { api } from './src/lib/api'
+import {
+  useFonts,
+  Roboto_400Regular,
+  Roboto_700Bold,
+} from '@expo-google-fonts/roboto'
+
+import { BaiJamjuree_700Bold } from '@expo-google-fonts/bai-jamjuree'
+
+import blurBg from '../src/assets/bg-blur.png'
+import Stripes from '../src/assets/stripes.svg'
+import NLWLogo from '../src/assets/nlw-spacetime-logo.svg'
+import { api } from '../src/lib/api'
 
 const StyledStripes = styled(Stripes)
 
@@ -22,10 +25,12 @@ const discovery = {
   authorizationEndpoint: 'https://github.com/login/oauth/authorize',
   tokenEndpoint: 'https://github.com/login/oauth/access_token',
   revocationEndpoint:
-    'https://github.com/settings/connections/applications/de985b01078a9e911ca6',
+    'https://github.com/settings/connections/applications/d26f194cc5d5132a51be',
 }
 
 export default function App() {
+  const router = useRouter()
+
   const [hasLoadedFonts] = useFonts({
     Roboto_400Regular,
     Roboto_700Bold,
@@ -34,7 +39,7 @@ export default function App() {
 
   const [, response, signInWithGithub] = useAuthRequest(
     {
-      clientId: 'de985b01078a9e911ca6',
+      clientId: 'd26f194cc5d5132a51be',
       scopes: ['identity'],
       redirectUri: makeRedirectUri({
         scheme: 'nlwspacetime',
@@ -43,8 +48,21 @@ export default function App() {
     discovery,
   )
 
+  async function handleGithubOAuthCode(code: string) {
+    const response = await api.post('/register', {
+      code,
+    })
+
+    const { token } = response.data
+
+    await SecureStore.setItemAsync('token', token)
+
+    router.push('/memories')
+  }
+
   useEffect(() => {
     // console.log(
+    //   'response',
     //   makeRedirectUri({
     //     scheme: 'nlwspacetime',
     //   }),
@@ -53,18 +71,7 @@ export default function App() {
     if (response?.type === 'success') {
       const { code } = response.params
 
-      api
-        .post('/register', {
-          code,
-        })
-        .then((response) => {
-          const { token } = response.data
-
-          SecureStore.setItemAsync('token', token)
-        })
-        .catch((err) => {
-          console.error(err)
-        })
+      handleGithubOAuthCode(code)
     }
   }, [response])
 
@@ -80,7 +87,7 @@ export default function App() {
     >
       <StyledStripes className="absolute left-2" />
 
-      <View className="flex-1 items-center justify-center gap-6 ">
+      <View className="flex-1 items-center justify-center gap-6">
         <NLWLogo />
 
         <View className="space-y-2">
@@ -107,6 +114,7 @@ export default function App() {
       <Text className="text-center font-body text-sm leading-relaxed text-gray-200">
         Feito com 💜 no NLW da Rocketseat
       </Text>
+
       <StatusBar style="light" translucent />
     </ImageBackground>
   )
